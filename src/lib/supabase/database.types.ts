@@ -1,6 +1,5 @@
 // Generated via the Supabase MCP `generate_typescript_types` tool from the live schema.
 // Regenerate after every migration instead of hand-editing.
-
 export type Json =
   | string
   | number
@@ -1075,6 +1074,7 @@ export type Database = {
       }
       quotation_versions: {
         Row: {
+          advance_percent: number
           created_at: string
           discount: number
           id: string
@@ -1085,6 +1085,7 @@ export type Database = {
           version_number: number
         }
         Insert: {
+          advance_percent?: number
           created_at?: string
           discount?: number
           id?: string
@@ -1095,6 +1096,7 @@ export type Database = {
           version_number: number
         }
         Update: {
+          advance_percent?: number
           created_at?: string
           discount?: number
           id?: string

@@ -16,6 +16,7 @@ export default async function ReviseQuotationPage({ params }: { params: Promise<
       companyName={detail.lead.company_name}
       lineItems={detail.lineItems}
       discount={detail.latestVersion?.discount ?? 0}
+      advancePercent={detail.latestVersion?.advance_percent ?? 60}
     />
   );
 }

@@ -21,8 +21,9 @@ export async function updateSystemSettings(
   for (const setting of SYSTEM_SETTINGS) {
     const raw = String(formData.get(setting.key) ?? "").trim();
     const value = Number(raw);
-    if (raw === "" || !Number.isFinite(value) || value < 0) {
-      return { error: `${setting.label} must be a non-negative number.` };
+    const max = "max" in setting ? setting.max : undefined;
+    if (raw === "" || !Number.isFinite(value) || value < 0 || (max !== undefined && value > max)) {
+      return { error: `${setting.label} must be a number between 0 and ${max ?? "∞"}.` };
     }
 
     const { data: previous } = await admin.from("system_settings").select("*").eq("key", setting.key).maybeSingle();

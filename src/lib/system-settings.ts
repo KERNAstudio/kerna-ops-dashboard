@@ -4,6 +4,14 @@
 // (escalations/detect.ts, action-required.ts) can't drift out of sync.
 export const SYSTEM_SETTINGS = [
   {
+    key: "default_advance_percent",
+    label: "Default advance payment split",
+    unit: "% advance",
+    default: 60,
+    max: 100,
+    hint: "§2 step 4: Quotation Builder pre-fills this as the advance %; final % is always 100 minus it. POC can override per quotation.",
+  },
+  {
     key: "payment_overdue_days",
     label: "Payment overdue after",
     unit: "days",

@@ -1,5 +1,6 @@
 import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { defaultFor } from "@/lib/system-settings";
 import { QuotationBuilder } from "./QuotationBuilder";
 
 export default async function NewQuotationPage() {
@@ -18,5 +19,12 @@ export default async function NewQuotationPage() {
 
   const { data: leads } = await query;
 
-  return <QuotationBuilder leads={leads ?? []} />;
+  const { data: advanceSetting } = await admin
+    .from("system_settings")
+    .select("value")
+    .eq("key", "default_advance_percent")
+    .maybeSingle();
+  const defaultAdvancePercent = Number(advanceSetting?.value) || defaultFor("default_advance_percent");
+
+  return <QuotationBuilder leads={leads ?? []} defaultAdvancePercent={defaultAdvancePercent} />;
 }

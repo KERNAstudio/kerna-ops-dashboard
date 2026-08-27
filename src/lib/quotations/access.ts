@@ -49,3 +49,10 @@ export function assertClientOwnsQuotation(actor: Actor, lead: Tables<"leads">) {
   if (actor.type !== "client") redirect("/403");
   if (lead.client_id !== actor.clientId) redirect("/403");
 }
+
+// §2 step 4 / §7: final % is always 100 - advance_percent, never stored or entered
+// separately. Shared by both builder forms and both read-only detail views.
+export function splitAdvanceFinal(total: number, advancePercent: number) {
+  const advance = (total * advancePercent) / 100;
+  return { advance, final: total - advance };
+}

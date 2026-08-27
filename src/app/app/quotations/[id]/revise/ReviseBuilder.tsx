@@ -14,11 +14,13 @@ export function ReviseBuilder({
   companyName,
   lineItems,
   discount: initialDiscount,
+  advancePercent: initialAdvancePercent,
 }: {
   quotationId: string;
   companyName: string;
   lineItems: Tables<"quotation_line_items">[];
   discount: number;
+  advancePercent: number;
 }) {
   const [state, formAction, pending] = useActionState(reviseQuotation, initialState);
   const [rows, setRows] = useState<Row[]>(
@@ -32,12 +34,16 @@ export function ReviseBuilder({
       : [{ title: "", description: "", unitPrice: "", quantity: "1" }]
   );
   const [discount, setDiscount] = useState(String(initialDiscount));
+  const [advancePercent, setAdvancePercent] = useState(String(initialAdvancePercent));
 
   const subtotal = useMemo(
     () => rows.reduce((sum, r) => sum + (Number(r.unitPrice) || 0) * (Number(r.quantity) || 0), 0),
     [rows]
   );
   const total = Math.max(0, subtotal - (Number(discount) || 0));
+  const advancePct = Math.min(100, Math.max(0, Number(advancePercent) || 0));
+  const advanceAmount = (total * advancePct) / 100;
+  const finalAmount = total - advanceAmount;
 
   function updateRow(i: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -131,6 +137,23 @@ export function ReviseBuilder({
           />
         </label>
 
+        <label className="mt-4 block text-xs font-medium text-text-secondary">
+          Advance %
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              name="advance_percent"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              value={advancePercent}
+              onChange={(e) => setAdvancePercent(e.target.value)}
+              className="w-24 rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-sm outline-none focus:border-accent-primary"
+            />
+            <span className="text-text-secondary">/ {(100 - advancePct).toFixed(0)}% final — auto-calculated, never entered directly</span>
+          </div>
+        </label>
+
         <div className="mt-4 space-y-1 border-t border-border-default pt-4 text-sm">
           <div className="flex justify-between text-text-secondary">
             <span>Subtotal</span>
@@ -143,6 +166,14 @@ export function ReviseBuilder({
           <div className="flex justify-between text-base font-bold">
             <span>Total</span>
             <span className="font-data">{total.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Advance due ({advancePct.toFixed(0)}%)</span>
+            <span className="font-data">{advanceAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Final due ({(100 - advancePct).toFixed(0)}%)</span>
+            <span className="font-data">{finalAmount.toFixed(2)}</span>
           </div>
         </div>
 

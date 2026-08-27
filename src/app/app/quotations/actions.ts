@@ -37,10 +37,14 @@ export async function createQuotation(_prev: QuotationFormState, formData: FormD
   const leadId = String(formData.get("lead_id") ?? "");
   const templateType = String(formData.get("template_type") ?? "").trim() || null;
   const discount = Number(formData.get("discount") ?? 0);
+  const advancePercent = Number(formData.get("advance_percent") ?? 60);
   const items = parseLineItems(formData);
 
   if (!leadId) return { error: "Choose a lead." };
   if (items.length === 0) return { error: "Add at least one line item." };
+  if (!Number.isFinite(advancePercent) || advancePercent < 0 || advancePercent > 100) {
+    return { error: "Advance % must be between 0 and 100." };
+  }
 
   const admin = createAdminClient();
 
@@ -56,7 +60,7 @@ export async function createQuotation(_prev: QuotationFormState, formData: FormD
 
   const { data: version, error: vErr } = await admin
     .from("quotation_versions")
-    .insert({ quotation_id: quotation.id, version_number: 1, subtotal, discount, total, is_final: false })
+    .insert({ quotation_id: quotation.id, version_number: 1, subtotal, discount, total, advance_percent: advancePercent, is_final: false })
     .select()
     .single();
   if (vErr || !version) return { error: "Could not create quotation version." };
@@ -172,8 +176,12 @@ export async function reviseQuotation(_prev: QuotationFormState, formData: FormD
   if (!latestVersion) return { error: "Nothing to revise yet." };
 
   const discount = Number(formData.get("discount") ?? 0);
+  const advancePercent = Number(formData.get("advance_percent") ?? latestVersion.advance_percent);
   const items = parseLineItems(formData);
   if (items.length === 0) return { error: "Add at least one line item." };
+  if (!Number.isFinite(advancePercent) || advancePercent < 0 || advancePercent > 100) {
+    return { error: "Advance % must be between 0 and 100." };
+  }
 
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   const total = Math.max(0, subtotal - discount);
@@ -187,6 +195,7 @@ export async function reviseQuotation(_prev: QuotationFormState, formData: FormD
       subtotal,
       discount,
       total,
+      advance_percent: advancePercent,
       is_final: false,
     })
     .select()

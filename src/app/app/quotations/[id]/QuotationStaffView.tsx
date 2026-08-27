@@ -4,13 +4,15 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { sendQuotation, archiveQuotation, type QuotationFormState, type SendResult } from "../actions";
 import { QUOTATION_STATUS_BADGE, type QuotationStatus } from "@/lib/quotations/constants";
-import type { QuotationDetail } from "@/lib/quotations/access";
+import { splitAdvanceFinal, type QuotationDetail } from "@/lib/quotations/access";
 
 const initialSend: SendResult = { error: null };
 const initialForm: QuotationFormState = { error: null };
 
 export function QuotationStaffView({ detail, pocName }: { detail: QuotationDetail; pocName: string }) {
   const { quotation, lead, latestVersion, lineItems } = detail;
+  const advancePercent = latestVersion?.advance_percent ?? 60;
+  const { advance, final } = splitAdvanceFinal(latestVersion?.total ?? 0, advancePercent);
   const [sendState, sendAction, sendPending] = useActionState(sendQuotation, initialSend);
   const [archiveState, archiveAction, archivePending] = useActionState(archiveQuotation, initialForm);
 
@@ -73,6 +75,14 @@ export function QuotationStaffView({ detail, pocName }: { detail: QuotationDetai
           <div className="flex justify-between text-base font-bold">
             <span>Total</span>
             <span className="font-data">{(latestVersion?.total ?? 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Advance due ({advancePercent.toFixed(0)}%)</span>
+            <span className="font-data">{advance.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Final due ({(100 - advancePercent).toFixed(0)}%)</span>
+            <span className="font-data">{final.toFixed(2)}</span>
           </div>
         </div>
       </div>

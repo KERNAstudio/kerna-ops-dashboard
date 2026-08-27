@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { approveQuotation, type ApproveFormState } from "../client-actions";
-import type { QuotationDetail } from "@/lib/quotations/access";
+import { splitAdvanceFinal, type QuotationDetail } from "@/lib/quotations/access";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const initialState: ApproveFormState = { error: null };
@@ -16,6 +16,8 @@ export function QuotationClientView({
 }) {
   const { quotation, lineItems, latestVersion } = detail;
   const [state, formAction, pending] = useActionState(approveQuotation, initialState);
+  const advancePercent = latestVersion?.advance_percent ?? 60;
+  const { advance, final } = splitAdvanceFinal(latestVersion?.total ?? 0, advancePercent);
 
   return (
     <div className="max-w-xl">
@@ -51,9 +53,19 @@ export function QuotationClientView({
           </tbody>
         </table>
 </div>
-        <div className="flex justify-between border-t border-border-default p-4 text-base font-bold">
-          <span>Total</span>
-          <span className="font-data">{(latestVersion?.total ?? 0).toFixed(2)}</span>
+        <div className="space-y-1 border-t border-border-default p-4 text-sm">
+          <div className="flex justify-between text-base font-bold">
+            <span>Total</span>
+            <span className="font-data">{(latestVersion?.total ?? 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Advance due ({advancePercent.toFixed(0)}%)</span>
+            <span className="font-data">{advance.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-text-secondary">
+            <span>Final due ({(100 - advancePercent).toFixed(0)}%)</span>
+            <span className="font-data">{final.toFixed(2)}</span>
+          </div>
         </div>
       </div>
 

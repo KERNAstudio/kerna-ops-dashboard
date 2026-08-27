@@ -27,6 +27,7 @@ export function SystemSettingsForm({ settings }: { settings: Setting[] }) {
                 name={setting.key}
                 type="number"
                 min={0}
+                max={"max" in setting ? setting.max : undefined}
                 step={1}
                 defaultValue={setting.value}
                 required
