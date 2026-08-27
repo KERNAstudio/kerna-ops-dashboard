@@ -1,0 +1,93 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { guard } from "@/lib/auth/guard";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
+import { runEscalationChecks } from "@/lib/escalations/detect";
+import { ESCALATION_STATUSES } from "@/lib/escalations/constants";
+
+export type EscalationFormState = { error: string | null };
+
+export async function runChecks(_prev: EscalationFormState, _formData: FormData): Promise<EscalationFormState> {
+  await guard({ allowStaffRoles: ["founder", "management"], allowClient: false });
+  await runEscalationChecks();
+  revalidatePath("/app/escalations");
+  return { error: null };
+}
+
+// §5: "Manual escalation: Founder ✓, POC ✓, System ✓ (automated), Dev/Design ✕, Client ✕."
+// This form covers Founder; a POC creating one from their own project is a follow-up (not
+// built this pass — the project widget is read-only for now).
+export async function createManualEscalation(_prev: EscalationFormState, formData: FormData): Promise<EscalationFormState> {
+  const actor = await guard({ allowStaffRoles: ["founder"], allowClient: false });
+  if (actor.type !== "staff") redirect("/403");
+
+  const projectId = String(formData.get("project_id") ?? "");
+  const escalationType = String(formData.get("escalation_type") ?? "").trim();
+  const severity = String(formData.get("severity") ?? "medium");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!projectId || !escalationType) return { error: "Project and type are required." };
+
+  const admin = createAdminClient();
+  const { data: escalation, error } = await admin
+    .from("escalations")
+    .insert({
+      project_id: projectId,
+      escalation_type: escalationType,
+      severity,
+      status: "open",
+      owner_id: actor.id,
+      triggered_by: actor.name,
+      reason: reason || null,
+    })
+    .select()
+    .single();
+  if (error || !escalation) return { error: "Could not create escalation." };
+
+  await logAudit({
+    userId: actor.id,
+    entityType: "escalation",
+    entityId: escalation.id,
+    action: "manual_create",
+    newState: escalation,
+  });
+
+  revalidatePath("/app/escalations");
+  return { error: null };
+}
+
+export async function updateEscalationStatus(_prev: EscalationFormState, formData: FormData): Promise<EscalationFormState> {
+  const actor = await guard({ allowStaffRoles: ["founder", "management"], allowClient: false });
+  if (actor.type !== "staff") redirect("/403");
+
+  const escalationId = String(formData.get("escalation_id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!ESCALATION_STATUSES.includes(status as (typeof ESCALATION_STATUSES)[number])) {
+    return { error: "Invalid status." };
+  }
+
+  const admin = createAdminClient();
+  const { data: previous } = await admin.from("escalations").select("*").eq("id", escalationId).maybeSingle();
+  if (!previous) return { error: "Escalation not found." };
+
+  const { data: updated } = await admin
+    .from("escalations")
+    .update({ status })
+    .eq("id", escalationId)
+    .select()
+    .single();
+
+  await logAudit({
+    userId: actor.id,
+    entityType: "escalation",
+    entityId: escalationId,
+    action: "status_change",
+    previousState: previous,
+    newState: updated,
+  });
+
+  revalidatePath("/app/escalations");
+  return { error: null };
+}

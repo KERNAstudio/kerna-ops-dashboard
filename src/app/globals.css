@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* Design tokens — locked, kerna-master-reference.md §6. Dark mode is primary;
+   light mode is prepared, not default. Don't invent new colors/spacing outside this set. */
+:root {
+  --bg-main: #0f0f0f;
+  --bg-card: #171717;
+  --bg-elevated: #1e1e1e;
+  --border-default: #2a2a2a;
+  --accent-primary: #1fac98;
+  --accent-hover: #17907f;
+  --accent-soft: rgba(31, 172, 152, 0.1);
+  --success: #2ecc71;
+  --warning: #f4b942;
+  --error: #e74c3c;
+  --text-primary: #ededed;
+  --text-secondary: #a3a3a3;
+  --radius-default: 12px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+}
+
+/* Light mode (optional, not default — see §6) */
+.light {
+  --bg-main: #f8f7f5;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --border-default: #e5e5e5;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+}
+
+@theme inline {
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border-default: var(--border-default);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --radius-DEFAULT: var(--radius-default);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --font-sans: var(--font-montserrat);
+  --font-data: var(--font-inter);
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
