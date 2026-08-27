@@ -19,3 +19,14 @@ export const STATUS_BADGE: Record<EscalationStatus, string> = {
   resolved: "bg-success/10 text-success",
   dismissed: "bg-bg-elevated text-text-secondary border border-border-default",
 };
+
+// §5 state rules, enforced (not just documented): OPEN -> UNDER_REVIEW -> ACTION_IN_PROGRESS
+// -> RESOLVED is the only forward path; ANY status can go to DISMISSED; nothing leaves
+// DISMISSED or RESOLVED. Was previously accepted as any-status-to-any-status in the action.
+export const ESCALATION_TRANSITIONS: Record<EscalationStatus, EscalationStatus[]> = {
+  open: ["under_review", "dismissed"],
+  under_review: ["action_in_progress", "dismissed"],
+  action_in_progress: ["resolved", "dismissed"],
+  resolved: [],
+  dismissed: [],
+};

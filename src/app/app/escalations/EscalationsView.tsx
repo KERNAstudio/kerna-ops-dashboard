@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { runChecks, createManualEscalation, updateEscalationStatus, type EscalationFormState } from "./actions";
-import { ESCALATION_STATUSES, SEVERITY_BADGE, STATUS_BADGE, type EscalationSeverity, type EscalationStatus } from "@/lib/escalations/constants";
+import { ESCALATION_TRANSITIONS, SEVERITY_BADGE, STATUS_BADGE, type EscalationSeverity, type EscalationStatus } from "@/lib/escalations/constants";
 
 const initialState: EscalationFormState = { error: null };
 
@@ -168,7 +168,7 @@ function EscalationRow({ escalation, canUpdateStatus }: { escalation: Escalation
         </span>
       </td>
       <td className="px-4 py-3 text-right">
-        {canUpdateStatus && escalation.status !== "resolved" && escalation.status !== "dismissed" && (
+        {canUpdateStatus && ESCALATION_TRANSITIONS[escalation.status as EscalationStatus]?.length > 0 && (
           <form action={action} className="inline-flex gap-1.5">
             <input type="hidden" name="escalation_id" value={escalation.id} />
             <select
@@ -181,7 +181,7 @@ function EscalationRow({ escalation, canUpdateStatus }: { escalation: Escalation
               <option value="" disabled>
                 Set status…
               </option>
-              {ESCALATION_STATUSES.filter((s) => s !== escalation.status).map((s) => (
+              {ESCALATION_TRANSITIONS[escalation.status as EscalationStatus].map((s) => (
                 <option key={s} value={s}>
                   {s.replace("_", " ")}
                 </option>
