@@ -5,6 +5,7 @@ import { PROJECT_STATUS_LABEL, type ProjectStatus } from "@/lib/projects/constan
 import { TimelineForm, HealthForm, SendFinalApprovalButton } from "./TimelineForm";
 import { ClientProjectOverview } from "./ClientProjectOverview";
 import { TerminationPanel } from "./TerminationPanel";
+import { RequirementsPanel } from "./RequirementsPanel";
 import { SEVERITY_BADGE, type EscalationSeverity } from "@/lib/escalations/constants";
 
 function fmtDate(v: string | null) {
@@ -35,6 +36,27 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
     .eq("project_id", id)
     .eq("status", "pending")
     .maybeSingle();
+
+  const { data: requirementSnapshotRow } = await admin
+    .from("requirement_snapshots")
+    .select("content, locked_at, locked_by:users(name)")
+    .eq("project_id", id)
+    .maybeSingle();
+  const requirementSnapshot = requirementSnapshotRow
+    ? { content: requirementSnapshotRow.content, locked_at: requirementSnapshotRow.locked_at, locked_by_name: requirementSnapshotRow.locked_by?.name ?? null }
+    : null;
+  const { data: addendaRows } = await admin
+    .from("requirement_addenda")
+    .select("id, description, created_at, created_by:users(name)")
+    .eq("project_id", id)
+    .order("created_at", { ascending: false });
+  const addenda = (addendaRows ?? []).map((a) => ({
+    id: a.id,
+    description: a.description,
+    created_at: a.created_at,
+    created_by_name: a.created_by?.name ?? null,
+  }));
+  const canEditRequirement = actor.type === "staff" && (actor.roles.includes("founder") || client?.poc_user_id === actor.id);
 
   // §5: "Project-level widget shows active count + highest severity badge; visible to
   // POC/Founder/Management (read-only), never to client [and not Dev/Design/Research]."
@@ -111,6 +133,8 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
         activity={activity}
         team={team}
         hasPendingTermination={!!pendingTermination}
+        requirementSnapshot={requirementSnapshot}
+        addenda={addenda}
       />
     );
   }
@@ -137,6 +161,7 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
       )}
 
       <TimelineForm projectId={id} internalDeadline={project.internal_deadline} clientDeadline={project.client_deadline} />
+      <RequirementsPanel projectId={id} snapshot={requirementSnapshot} addenda={addenda} canEdit={canEditRequirement} />
       <HealthForm projectId={id} healthScoreInternal={project.health_score_internal} healthStatusClient={project.health_status_client} />
       {project.status === "in_development" && <SendFinalApprovalButton projectId={id} />}
       {pendingTermination && (actor.roles.includes("founder") || client?.poc_user_id === actor.id) && (

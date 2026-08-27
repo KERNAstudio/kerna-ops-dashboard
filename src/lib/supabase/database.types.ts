@@ -1158,6 +1158,84 @@ export type Database = {
           },
         ]
       }
+      requirement_addenda: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_addenda_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_addenda_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_snapshots: {
+        Row: {
+          content: string
+          id: string
+          locked_at: string
+          locked_by: string | null
+          project_id: string
+        }
+        Insert: {
+          content: string
+          id?: string
+          locked_at?: string
+          locked_by?: string | null
+          project_id: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          locked_at?: string
+          locked_by?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_snapshots_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resources: {
         Row: {
           created_at: string

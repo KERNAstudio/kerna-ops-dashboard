@@ -1,5 +1,6 @@
 import { ScopeApprovalButton, FinalDeliveryReview } from "./TimelineForm";
 import { DangerZone } from "./DangerZone";
+import { RequirementsPanel } from "./RequirementsPanel";
 
 // §6: "Client view modes — Simple: health, stage, next action, pending approvals, short
 // updates, vault when unlocked. Balanced (default): + module progress, milestone timeline,
@@ -19,6 +20,8 @@ export function ClientProjectOverview({
   activity,
   team,
   hasPendingTermination,
+  requirementSnapshot,
+  addenda,
 }: {
   projectId: string;
   status: string;
@@ -32,6 +35,8 @@ export function ClientProjectOverview({
   activity: { action: string; created_at: string }[];
   team: { name: string; role: string }[];
   hasPendingTermination: boolean;
+  requirementSnapshot: { content: string; locked_at: string; locked_by_name: string | null } | null;
+  addenda: { id: string; description: string; created_at: string; created_by_name: string | null }[];
 }) {
   const showBalanced = viewMode === "balanced" || viewMode === "power";
   const showPower = viewMode === "power";
@@ -45,7 +50,12 @@ export function ClientProjectOverview({
         <SummaryCard label="Advance/final paid" value={paidTotal} />
       </div>
 
-      {status === "team_assigned" && <ScopeApprovalButton projectId={projectId} />}
+      {status === "team_assigned" && (
+        <>
+          <RequirementsPanel projectId={projectId} snapshot={requirementSnapshot} addenda={addenda} canEdit={false} />
+          {requirementSnapshot && <ScopeApprovalButton projectId={projectId} />}
+        </>
+      )}
       {status === "deliverable_sent" && <FinalDeliveryReview projectId={projectId} />}
 
       {showBalanced && (
