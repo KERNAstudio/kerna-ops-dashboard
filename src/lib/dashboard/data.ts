@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { defaultFor } from "@/lib/system-settings";
 
 export type RiskItem = {
   id: string;
@@ -51,7 +52,15 @@ export async function getFounderDashboardData(): Promise<FounderDashboardData> {
     }
   }
 
-  const overdueCutoff = new Date(Date.now() - 10 * 86400000).toISOString(); // matches the payment_overdue_days default
+  const { data: overdueDaysSetting } = await admin
+    .from("system_settings")
+    .select("value")
+    .eq("key", "payment_overdue_days")
+    .maybeSingle();
+  const overdueDays = Number(overdueDaysSetting?.value);
+  const overdueCutoff = new Date(
+    Date.now() - (Number.isFinite(overdueDays) ? overdueDays : defaultFor("payment_overdue_days")) * 86400000
+  ).toISOString();
   const { data: overduePayments } = await admin
     .from("payments")
     .select("amount")

@@ -1,11 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { defaultFor, type SystemSettingKey } from "@/lib/system-settings";
 import type { EscalationSeverity } from "./constants";
 
-async function getThreshold(admin: ReturnType<typeof createAdminClient>, key: string, fallback: number) {
+async function getThreshold(admin: ReturnType<typeof createAdminClient>, key: SystemSettingKey) {
   const { data } = await admin.from("system_settings").select("value").eq("key", key).maybeSingle();
   const value = Number(data?.value);
-  return Number.isFinite(value) ? value : fallback;
+  return Number.isFinite(value) ? value : defaultFor(key);
 }
 
 // One escalation per (project, type) open at a time — re-running the check is idempotent.
@@ -77,7 +78,7 @@ async function createEscalationIfNotExists(params: {
 // due", since nothing else in the schema represents a due date at the payment level.
 export async function detectPaymentOverdue() {
   const admin = createAdminClient();
-  const days = await getThreshold(admin, "payment_overdue_days", 10);
+  const days = await getThreshold(admin, "payment_overdue_days");
   const cutoff = new Date(Date.now() - days * 86400000).toISOString();
 
   const { data: overdue } = await admin
@@ -107,7 +108,7 @@ export async function detectPaymentOverdue() {
 // Only checked for projects still actively moving (not completed).
 export async function detectPocInactivity() {
   const admin = createAdminClient();
-  const days = await getThreshold(admin, "poc_inactive_days", 1);
+  const days = await getThreshold(admin, "poc_inactive_days");
   const cutoff = new Date(Date.now() - days * 86400000).toISOString();
 
   const { data: projects } = await admin.from("projects").select("id, client_id").neq("status", "completed");
@@ -134,7 +135,7 @@ export async function detectPocInactivity() {
 // modules, which is the only record of a client rejecting a deliverable.
 export async function detectClientRejectionLoop() {
   const admin = createAdminClient();
-  const threshold = await getThreshold(admin, "client_rejection_threshold", 3);
+  const threshold = await getThreshold(admin, "client_rejection_threshold");
 
   const { data: projects } = await admin.from("projects").select("id, client_id");
 

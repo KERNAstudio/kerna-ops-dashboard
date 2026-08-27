@@ -122,6 +122,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   </Link>
                 </>
               )}
+              {actor.type === "staff" && actor.roles.includes("founder") && (
+                <Link
+                  href="/app/settings/system"
+                  className="mb-px flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
+                >
+                  System Settings
+                </Link>
+              )}
             </>
           )}
         </nav>

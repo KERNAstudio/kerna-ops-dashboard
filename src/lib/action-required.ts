@@ -1,12 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { StaffActor } from "@/lib/auth/session";
+import { defaultFor, type SystemSettingKey } from "@/lib/system-settings";
 
 export type ActionRequiredItem = { label: string; href: string; severity: "high" | "medium" };
 
-async function getThreshold(admin: ReturnType<typeof createAdminClient>, key: string, fallback: number) {
+async function getThreshold(admin: ReturnType<typeof createAdminClient>, key: SystemSettingKey) {
   const { data } = await admin.from("system_settings").select("value").eq("key", key).maybeSingle();
   const value = Number(data?.value);
-  return Number.isFinite(value) ? value : fallback;
+  return Number.isFinite(value) ? value : defaultFor(key);
 }
 
 // §5: "Alerts (system-only nudges: approval pending, client inactive) never create a
@@ -30,8 +31,8 @@ export async function getActionRequiredItems(actor: StaffActor): Promise<ActionR
     if (projectIds.length === 0) return [];
   }
 
-  const approvalDays = await getThreshold(admin, "approval_pending_days", 2);
-  const clientInactiveDays = await getThreshold(admin, "client_inactive_days", 2);
+  const approvalDays = await getThreshold(admin, "approval_pending_days");
+  const clientInactiveDays = await getThreshold(admin, "client_inactive_days");
   const approvalCutoff = new Date(Date.now() - approvalDays * 86400000).toISOString();
   const clientCutoff = new Date(Date.now() - clientInactiveDays * 86400000).toISOString();
 
