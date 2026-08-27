@@ -10,7 +10,7 @@ export default async function ProjectPaymentsPage({ params }: { params: Promise<
   const admin = createAdminClient();
   const { data: payments } = await admin
     .from("payments")
-    .select("*")
+    .select("*, invoices(invoice_number)")
     .eq("project_id", id)
     .order("created_at", { ascending: false });
 

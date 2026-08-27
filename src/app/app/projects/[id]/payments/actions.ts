@@ -6,6 +6,7 @@ import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { advanceProjectStatus } from "@/lib/projects/lifecycle";
+import { createInvoiceForPayment } from "@/lib/invoices";
 
 export type PaymentFormState = { error: string | null };
 
@@ -39,7 +40,10 @@ export async function logPayment(_prev: PaymentFormState, formData: FormData): P
 
   await logAudit({ userId: actor.id, entityType: "payment", entityId: payment.id, action: "create", newState: payment });
 
-  if (received) await advanceProjectOnPayment(projectId, paymentType, actor.id);
+  if (received) {
+    await createInvoiceForPayment(admin, { projectId, paymentId: payment.id, amount, actorId: actor.id });
+    await advanceProjectOnPayment(projectId, paymentType, actor.id);
+  }
 
   revalidatePath(`/app/projects/${projectId}/payments`);
   revalidatePath(`/app/projects/${projectId}/overview`);
@@ -72,6 +76,7 @@ export async function markPaymentReceived(_prev: PaymentFormState, formData: For
     newState: updated,
   });
 
+  await createInvoiceForPayment(admin, { projectId, paymentId, amount: previous.amount, actorId: actor.id });
   await advanceProjectOnPayment(projectId, previous.payment_type, actor.id);
 
   revalidatePath(`/app/projects/${projectId}/payments`);

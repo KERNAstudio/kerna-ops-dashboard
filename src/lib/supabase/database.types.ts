@@ -667,6 +667,7 @@ export type Database = {
           id: string
           invoice_number: string
           issued_at: string
+          payment_id: string | null
           project_id: string
           sequence_number: number
           status: string
@@ -679,6 +680,7 @@ export type Database = {
           id?: string
           invoice_number: string
           issued_at?: string
+          payment_id?: string | null
           project_id: string
           sequence_number: number
           status?: string
@@ -691,6 +693,7 @@ export type Database = {
           id?: string
           invoice_number?: string
           issued_at?: string
+          payment_id?: string | null
           project_id?: string
           sequence_number?: number
           status?: string
@@ -698,6 +701,13 @@ export type Database = {
           total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_project_id_fkey"
             columns: ["project_id"]

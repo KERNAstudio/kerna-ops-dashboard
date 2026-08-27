@@ -6,13 +6,15 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 const initialState: PaymentFormState = { error: null };
 
+type PaymentWithInvoice = Tables<"payments"> & { invoices: { invoice_number: string } | { invoice_number: string }[] | null };
+
 export function PaymentsView({
   projectId,
   payments,
   canEdit,
 }: {
   projectId: string;
-  payments: Tables<"payments">[];
+  payments: PaymentWithInvoice[];
   canEdit: boolean;
 }) {
   const [logState, logAction, logPending] = useActionState(logPayment, initialState);
@@ -26,7 +28,7 @@ export function PaymentsView({
 <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              {["Type", "Amount", "Status", "Date", ""].map((h) => (
+              {["Type", "Amount", "Invoice", "Status", "Date", ""].map((h) => (
                 <th
                   key={h}
                   className="border-b border-border-default px-4 py-2.5 text-left font-data text-[10.5px] font-semibold uppercase tracking-wider text-text-secondary"
@@ -42,7 +44,7 @@ export function PaymentsView({
             ))}
             {payments.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
+                <td colSpan={6} className="px-4 py-8 text-center text-text-secondary">
                   No payments logged yet.
                 </td>
               </tr>
@@ -109,16 +111,18 @@ function PaymentRow({
   projectId,
   canEdit,
 }: {
-  payment: Tables<"payments">;
+  payment: PaymentWithInvoice;
   projectId: string;
   canEdit: boolean;
 }) {
   const [state, action, pending] = useActionState(markPaymentReceived, initialState);
+  const invoice = Array.isArray(payment.invoices) ? payment.invoices[0] : payment.invoices;
 
   return (
     <tr className="border-b border-border-default last:border-0">
       <td className="px-4 py-3 capitalize">{payment.payment_type}</td>
       <td className="px-4 py-3 font-data">{payment.amount.toFixed(2)}</td>
+      <td className="px-4 py-3 font-data text-text-secondary">{invoice?.invoice_number ?? "—"}</td>
       <td className="px-4 py-3">
         <span
           className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11.5px] font-medium font-data ${
