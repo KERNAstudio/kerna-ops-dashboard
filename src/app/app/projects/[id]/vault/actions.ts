@@ -6,6 +6,7 @@ import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { uploadProjectFile, getSignedFileUrl } from "@/lib/storage";
+import { checkProjectFullyPaid } from "@/lib/projects/payment-gate";
 
 export type VaultFormState = { error: string | null; fileUrl?: string };
 
@@ -56,7 +57,7 @@ export async function logDownload(_prev: VaultFormState, formData: FormData): Pr
   if (!resource || resource.project_id !== projectId) redirect("/403");
 
   const { data: project } = await admin.from("projects").select("status").eq("id", projectId).maybeSingle();
-  const fullyPaid = project?.status === "completed";
+  const fullyPaid = !!project && (await checkProjectFullyPaid(admin, projectId, project.status));
   if (!resource.downloadable || !fullyPaid) {
     return { error: "This resource isn't available for download yet." };
   }

@@ -1,7 +1,7 @@
 import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProject } from "@/lib/projects/access";
-import { isProjectFullyPaid } from "@/lib/projects/payment-gate";
+import { checkProjectFullyPaid } from "@/lib/projects/payment-gate";
 import { maskSecret, decryptSecret } from "@/lib/crypto";
 import { CredentialsView } from "./CredentialsView";
 
@@ -36,7 +36,7 @@ export default async function ProjectCredentialsPage({ params }: { params: Promi
       credentials={masked}
       canManage={!!canManage}
       isClient={actor.type === "client"}
-      fullyPaid={isProjectFullyPaid(project.status)}
+      fullyPaid={await checkProjectFullyPaid(admin, id, project.status)}
     />
   );
 }

@@ -53,6 +53,14 @@ export const SYSTEM_SETTINGS = [
     default: 2,
     hint: "Action-required nudge (top bar 🔴) — doesn't create an escalation record, just surfaces to staff.",
   },
+  {
+    key: "payment_unlock_min_percent",
+    label: "Vault unlock threshold",
+    unit: "% paid",
+    default: 100,
+    max: 100,
+    hint: "CLAUDE.md non-negotiable: vault download is payment-gated. Default 100 means nothing unlocks before the project is fully paid — lowering this is a deliberate, auditable policy change, not a bug.",
+  },
 ] as const;
 
 export type SystemSettingKey = (typeof SYSTEM_SETTINGS)[number]["key"];

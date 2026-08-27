@@ -6,7 +6,7 @@ import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
-import { isProjectFullyPaid } from "@/lib/projects/payment-gate";
+import { checkProjectFullyPaid } from "@/lib/projects/payment-gate";
 
 export type CredentialFormState = { error: string | null; revealed?: { id: string; password: string } };
 
@@ -63,7 +63,7 @@ export async function revealCredential(_prev: CredentialFormState, formData: For
 
   if (actor.type === "client") {
     const { data: project } = await admin.from("projects").select("status").eq("id", projectId).maybeSingle();
-    if (!project || !isProjectFullyPaid(project.status)) {
+    if (!project || !(await checkProjectFullyPaid(admin, projectId, project.status))) {
       return { error: "Credentials unlock once the project is fully paid and released." };
     }
   }

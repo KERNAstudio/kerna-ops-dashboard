@@ -1,7 +1,7 @@
 import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProject } from "@/lib/projects/access";
-import { isProjectFullyPaid } from "@/lib/projects/payment-gate";
+import { checkProjectFullyPaid } from "@/lib/projects/payment-gate";
 import { VaultView } from "./VaultView";
 
 export default async function ProjectVaultPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +26,7 @@ export default async function ProjectVaultPage({ params }: { params: Promise<{ i
       resources={resources ?? []}
       canManage={!!canManage}
       isClient={actor.type === "client"}
-      fullyPaid={isProjectFullyPaid(project.status)}
+      fullyPaid={await checkProjectFullyPaid(admin, id, project.status)}
     />
   );
 }
