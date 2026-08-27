@@ -16,6 +16,11 @@
   --text-primary: #ededed;
   --text-secondary: #a3a3a3;
   --radius-default: 12px;
+  /* Named spacing scale from §6 — kept as plain CSS variables only, deliberately NOT
+     re-exposed under Tailwind's --spacing- theme namespace: those names (xs, sm, md, lg,
+     xl, 2xl) collide with Tailwind v4's own reserved T-shirt-size scale for max-w, w,
+     h utilities etc., and doing that once silently turned max-w-sm into 8px app-wide.
+     Every component uses Tailwind's default numeric spacing scale (p-4, gap-3, ...) instead. */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -48,12 +53,6 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --radius-DEFAULT: var(--radius-default);
-  --spacing-xs: var(--space-xs);
-  --spacing-sm: var(--space-sm);
-  --spacing-md: var(--space-md);
-  --spacing-lg: var(--space-lg);
-  --spacing-xl: var(--space-xl);
-  --spacing-2xl: var(--space-2xl);
   --font-sans: var(--font-montserrat);
   --font-data: var(--font-inter);
 }
