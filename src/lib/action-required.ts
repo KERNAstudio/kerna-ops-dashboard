@@ -33,8 +33,12 @@ export async function getActionRequiredItems(actor: StaffActor): Promise<ActionR
 
   const approvalDays = await getThreshold(admin, "approval_pending_days");
   const clientInactiveDays = await getThreshold(admin, "client_inactive_days");
+  const pocInactiveDays = await getThreshold(admin, "poc_inactive_days");
+  const pocSoftInactiveHours = await getThreshold(admin, "poc_soft_inactive_hours");
   const approvalCutoff = new Date(Date.now() - approvalDays * 86400000).toISOString();
   const clientCutoff = new Date(Date.now() - clientInactiveDays * 86400000).toISOString();
+  const pocHardCutoff = new Date(Date.now() - pocInactiveDays * 86400000).toISOString();
+  const pocSoftCutoff = new Date(Date.now() - pocSoftInactiveHours * 3600000).toISOString();
 
   const items: ActionRequiredItem[] = [];
 
@@ -89,6 +93,33 @@ export async function getActionRequiredItems(actor: StaffActor): Promise<ActionR
       label: `Client inactive — ${project.clients?.company_name ?? "project"}`,
       href: `/app/projects/${projectId}/overview`,
       severity: "high",
+    });
+  }
+
+  // §8 open item: "soft POC-inactivity alert at 12h, before the 1-day HIGH escalation."
+  // A nudge here, not an escalations row — only shown in the window between the soft and
+  // hard thresholds, since past the hard threshold detectPocInactivity (escalations/detect.ts)
+  // has already raised the real HIGH escalation and this would just be noise on top of it.
+  for (const projectId of scopedProjectIds) {
+    const { data: project } = await admin
+      .from("projects")
+      .select("status, clients(company_name, poc_user_id)")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!project || project.status === "completed" || !project.clients?.poc_user_id) continue;
+
+    const { data: poc } = await admin
+      .from("users")
+      .select("last_login_at")
+      .eq("id", project.clients.poc_user_id)
+      .maybeSingle();
+    if (!poc?.last_login_at) continue;
+    if (poc.last_login_at >= pocSoftCutoff || poc.last_login_at < pocHardCutoff) continue;
+
+    items.push({
+      label: `POC inactive ${pocSoftInactiveHours}h+ — ${project.clients.company_name}`,
+      href: `/app/projects/${projectId}/overview`,
+      severity: "medium",
     });
   }
 

@@ -26,6 +26,13 @@ export const SYSTEM_SETTINGS = [
     hint: "§5 POC Inactivity escalation (High severity) fires once the POC hasn't logged in for this long.",
   },
   {
+    key: "poc_soft_inactive_hours",
+    label: "POC soft inactivity alert",
+    unit: "hours",
+    default: 12,
+    hint: "§8 open item: a top-bar nudge before the 1-day HIGH escalation above — doesn't create an escalation record, just an early heads-up.",
+  },
+  {
     key: "client_rejection_threshold",
     label: "Client rejection loop threshold",
     unit: "rejections",
