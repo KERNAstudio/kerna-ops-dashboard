@@ -74,7 +74,7 @@ export function ModuleWorkspaceView({
                 <td className="px-4 py-3 text-text-secondary">{new Date(v.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-text-secondary">{v.notes ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
-                  <PreviewLink fileUrl={v.file_url} />
+                  <PreviewLink projectId={projectId} fileUrl={v.file_url} />
                 </td>
               </tr>
             ))}
@@ -120,12 +120,12 @@ export function ModuleWorkspaceView({
           <input type="hidden" name="module_id" value={mod.id} />
           <p className="text-sm font-bold">Upload new version</p>
           <label className="mt-2 block text-xs font-medium text-text-secondary">
-            File URL
+            File
             <input
-              name="file_url"
-              placeholder="https://…"
+              name="file"
+              type="file"
               required
-              className="mt-1 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-sm outline-none focus:border-accent-primary"
+              className="mt-1 block w-full text-sm text-text-secondary file:mr-3 file:rounded-lg file:border file:border-border-default file:bg-bg-card file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-text-primary"
             />
           </label>
           <label className="mt-2 block text-xs font-medium text-text-secondary">

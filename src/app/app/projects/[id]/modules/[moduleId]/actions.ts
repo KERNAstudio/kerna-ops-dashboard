@@ -7,12 +7,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { getModuleDetail } from "@/lib/modules/access";
 import { advanceProjectStatus } from "@/lib/projects/lifecycle";
+import { uploadProjectFile } from "@/lib/storage";
 
 export type ModuleActionState = { error: string | null };
 
-// §7 Module Workspace upload panel. V1 preview support is image/PDF/web-preview only —
-// no file storage bucket is wired yet, so file_url is a plain URL for now (same cut as
-// the vault/resources tables).
+// §7 Module Workspace upload panel. Files go to the private "project-files" Storage bucket
+// (src/lib/storage.ts) — file_url now holds a storage path, resolved to a signed URL on
+// preview rather than served as a static link.
 export async function uploadVersion(_prev: ModuleActionState, formData: FormData): Promise<ModuleActionState> {
   const projectId = String(formData.get("project_id") ?? "");
   const moduleId = String(formData.get("module_id") ?? "");
@@ -24,19 +25,26 @@ export async function uploadVersion(_prev: ModuleActionState, formData: FormData
     return { error: "This module's latest version is approved and locked. Ask the POC to reopen it first." };
   }
 
-  const fileUrl = String(formData.get("file_url") ?? "").trim();
+  const file = formData.get("file");
   const notes = String(formData.get("notes") ?? "").trim();
-  if (!fileUrl) return { error: "A file URL is required." };
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a file to upload." };
 
   const admin = createAdminClient();
   const nextVersionNumber = (latestVersion?.version_number ?? 0) + 1;
+  const storagePath = `${projectId}/modules/${moduleId}/v${nextVersionNumber}-${file.name}`;
+
+  try {
+    await uploadProjectFile(storagePath, file);
+  } catch {
+    return { error: "Could not upload the file." };
+  }
 
   const { data: version, error } = await admin
     .from("module_versions")
     .insert({
       module_id: moduleId,
       version_number: nextVersionNumber,
-      file_url: fileUrl,
+      file_url: storagePath,
       notes: notes || null,
       uploaded_by: actor.id,
     })

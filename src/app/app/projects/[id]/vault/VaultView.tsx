@@ -66,12 +66,12 @@ export function VaultView({
           <input type="hidden" name="project_id" value={projectId} />
           <p className="text-sm font-bold">Add a file</p>
           <label className="mt-2 block text-xs font-medium text-text-secondary">
-            File URL
+            File
             <input
-              name="file_url"
-              placeholder="https://…"
+              name="file"
+              type="file"
               required
-              className="mt-1 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-sm outline-none focus:border-accent-primary"
+              className="mt-1 block w-full text-sm text-text-secondary file:mr-3 file:rounded-lg file:border file:border-border-default file:bg-bg-elevated file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-text-primary"
             />
           </label>
           <label className="mt-2 flex items-center gap-2 text-xs text-text-secondary">
@@ -105,19 +105,21 @@ function ResourceRow({
   const canDownload = resource.downloadable && fullyPaid;
 
   // The action just records the audit-logged download and hands back the URL to open —
-  // there's no real file storage behind this yet (see actions.ts), so "download" is a
-  // gated open-in-new-tab rather than an actual file transfer.
+  // The action resolves a short-lived signed URL for the private Storage object and hands
+  // it back here to open — see src/lib/storage.ts.
   useEffect(() => {
     if (state.fileUrl) window.open(state.fileUrl, "_blank", "noopener,noreferrer");
   }, [state.fileUrl]);
 
+  const displayName = (resource.file_url.split("/").pop() ?? resource.file_url).replace(/^\d+-/, "");
+
   return (
     <tr className="border-b border-border-default last:border-0">
-      <td className="px-4 py-3 font-semibold">{resource.file_url.split("/").pop()}</td>
+      <td className="px-4 py-3 font-semibold">{displayName}</td>
       <td className="px-4 py-3 text-text-secondary">{new Date(resource.created_at).toLocaleDateString()}</td>
       <td className="px-4 py-3 text-right">
         <span className="mr-3">
-          <PreviewLink fileUrl={resource.file_url} />
+          <PreviewLink projectId={projectId} fileUrl={resource.file_url} />
         </span>
         {canDownload ? (
           <form action={action} className="inline">

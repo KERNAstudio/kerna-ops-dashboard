@@ -38,7 +38,7 @@ export function ReviewView({
       </h1>
 
       <div className="mt-4 rounded-[var(--radius-default)] border border-border-default bg-bg-card p-4">
-        <PreviewLink fileUrl={version.file_url} big />
+        <PreviewLink projectId={projectId} fileUrl={version.file_url} big />
         {version.notes && <p className="mt-2 text-xs text-text-secondary">{version.notes}</p>}
       </div>
 

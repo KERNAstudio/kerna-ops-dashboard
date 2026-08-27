@@ -5,24 +5,33 @@ import { redirect } from "next/navigation";
 import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { uploadProjectFile, getSignedFileUrl } from "@/lib/storage";
 
 export type VaultFormState = { error: string | null; fileUrl?: string };
 
 // No VAULT_EDIT permission code exists in §3's registry — uploading is project
 // administration, gated the same way module creation is (PROJECT_EDIT, POC-overridable).
+// Files go to the private "project-files" Storage bucket (src/lib/storage.ts).
 export async function addResource(_prev: VaultFormState, formData: FormData): Promise<VaultFormState> {
   const projectId = String(formData.get("project_id") ?? "");
   const actor = await guard({ projectId, permission: "PROJECT_EDIT" });
   if (actor.type !== "staff") redirect("/403");
 
-  const fileUrl = String(formData.get("file_url") ?? "").trim();
+  const file = formData.get("file");
   const downloadable = formData.get("downloadable") === "on";
-  if (!fileUrl) return { error: "A file URL is required." };
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a file to upload." };
+
+  const storagePath = `${projectId}/vault/${Date.now()}-${file.name}`;
+  try {
+    await uploadProjectFile(storagePath, file);
+  } catch {
+    return { error: "Could not upload the file." };
+  }
 
   const admin = createAdminClient();
   const { data: resource, error } = await admin
     .from("resources")
-    .insert({ project_id: projectId, file_url: fileUrl, downloadable })
+    .insert({ project_id: projectId, file_url: storagePath, downloadable })
     .select()
     .single();
   if (error || !resource) return { error: "Could not add resource." };
@@ -35,7 +44,8 @@ export async function addResource(_prev: VaultFormState, formData: FormData): Pr
 
 // CLAUDE.md non-negotiable: "Vault download is payment-gated... preview always allowed."
 // This is only called when the client-side gate already passed, but it re-checks
-// server-side so the rule can't be bypassed by calling the action directly.
+// server-side so the rule can't be bypassed by calling the action directly. The signed URL
+// is only ever generated once that check passes — the file has no static public link.
 export async function logDownload(_prev: VaultFormState, formData: FormData): Promise<VaultFormState> {
   const projectId = String(formData.get("project_id") ?? "");
   const actor = await guard({ projectId });
@@ -51,6 +61,9 @@ export async function logDownload(_prev: VaultFormState, formData: FormData): Pr
     return { error: "This resource isn't available for download yet." };
   }
 
+  const url = await getSignedFileUrl(resource.file_url, 120);
+  if (!url) return { error: "Could not load this file." };
+
   await logAudit({
     userId: actor.type === "staff" ? actor.id : null,
     entityType: "resource",
@@ -59,5 +72,5 @@ export async function logDownload(_prev: VaultFormState, formData: FormData): Pr
     newState: resource,
   });
 
-  return { error: null, fileUrl: resource.file_url };
+  return { error: null, fileUrl: url };
 }

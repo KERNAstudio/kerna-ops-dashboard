@@ -75,7 +75,7 @@ async function createEscalationIfNotExists(params: {
 // §5 rule: "Payment Overdue | due_date + 10d < today, unpaid | High". PAYMENTS has no
 // due_date column (§1) — a pending payment's created_at is the proxy for "when it became
 // due", since nothing else in the schema represents a due date at the payment level.
-async function detectPaymentOverdue() {
+export async function detectPaymentOverdue() {
   const admin = createAdminClient();
   const days = await getThreshold(admin, "payment_overdue_days", 10);
   const cutoff = new Date(Date.now() - days * 86400000).toISOString();
@@ -105,7 +105,7 @@ async function detectPaymentOverdue() {
 // §5 rule: "POC Inactivity | last_activity > 1 day | High | Founder". last_activity is
 // derived from users.last_login_at (set on every staff sign-in — see src/app/login/actions.ts).
 // Only checked for projects still actively moving (not completed).
-async function detectPocInactivity() {
+export async function detectPocInactivity() {
   const admin = createAdminClient();
   const days = await getThreshold(admin, "poc_inactive_days", 1);
   const cutoff = new Date(Date.now() - days * 86400000).toISOString();
@@ -132,7 +132,7 @@ async function detectPocInactivity() {
 // §5 rule: "Client Rejection Loop | client_rejection_count >= 3 | Medium". No counter
 // column exists — derived by counting 'changes_requested' approvals across the project's
 // modules, which is the only record of a client rejecting a deliverable.
-async function detectClientRejectionLoop() {
+export async function detectClientRejectionLoop() {
   const admin = createAdminClient();
   const threshold = await getThreshold(admin, "client_rejection_threshold", 3);
 
