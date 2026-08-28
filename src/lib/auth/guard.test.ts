@@ -92,6 +92,12 @@ describe("guard()", () => {
     await expect(guard({ projectId: "proj-1" })).rejects.toThrow("REDIRECT:/403");
   });
 
+  it("blocks a client from a project whose access has been revoked (§2 step 12 Data Control)", async () => {
+    db.projects.push({ id: "proj-revoked", client_id: "client-1", client_access_revoked_at: "2026-01-01T00:00:00Z" });
+    vi.mocked(getActor).mockResolvedValue(client({ clientId: "client-1" }));
+    await expect(guard({ projectId: "proj-revoked" })).rejects.toThrow("REDIRECT:/403");
+  });
+
   it("rejects a client from a staff-only route (allowClient: false)", async () => {
     vi.mocked(getActor).mockResolvedValue(client());
     await expect(guard({ allowClient: false })).rejects.toThrow("REDIRECT:/403");

@@ -82,10 +82,15 @@ export async function guard(options: GuardOptions = {}): Promise<Actor> {
       const admin = createAdminClient();
       const { data: project } = await admin
         .from("projects")
-        .select("client_id")
+        .select("client_id, client_access_revoked_at")
         .eq("id", options.projectId)
         .maybeSingle();
       if (!project || project.client_id !== actor.clientId) redirect("/403"); // (3)
+      // §2 step 12 Data Control: an approved termination request revokes the client's
+      // access to this one project without touching their login (client_users is
+      // account-wide — other projects, if any, are unaffected). Data itself is retained
+      // (KERNA_TC_1.pdf §21.2), only visibility is cut.
+      if (project.client_access_revoked_at) redirect("/403");
     }
     // Clients have no module-scope or permission-code system: their edits are limited to
     // approval actions on the approvals table, checked at the point of that mutation.

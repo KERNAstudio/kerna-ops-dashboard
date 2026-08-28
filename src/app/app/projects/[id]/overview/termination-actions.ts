@@ -65,6 +65,25 @@ export async function resolveTermination(_prev: TerminationFormState, formData: 
     .select()
     .single();
 
+  // Approval revokes the client's access to this project (see guard.ts) — it does not
+  // delete anything. KERNA_TC_1.pdf §21.2 reserves indefinite internal data retention, so
+  // "delete my project" is honored as "I can no longer see it," not literal destruction.
+  if (status === "approved") {
+    const { data: revokedProject } = await admin
+      .from("projects")
+      .update({ client_access_revoked_at: new Date().toISOString() })
+      .eq("id", projectId)
+      .select()
+      .single();
+    await logAudit({
+      userId: actor.id,
+      entityType: "project",
+      entityId: projectId,
+      action: "client_access_revoked",
+      newState: revokedProject,
+    });
+  }
+
   await logAudit({
     userId: actor.id,
     entityType: "termination_request",

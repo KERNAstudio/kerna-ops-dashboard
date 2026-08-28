@@ -994,6 +994,7 @@ export type Database = {
       projects: {
         Row: {
           change_request_window_expires_at: string | null
+          client_access_revoked_at: string | null
           client_deadline: string | null
           client_id: string
           created_at: string
@@ -1008,6 +1009,7 @@ export type Database = {
         }
         Insert: {
           change_request_window_expires_at?: string | null
+          client_access_revoked_at?: string | null
           client_deadline?: string | null
           client_id: string
           created_at?: string
@@ -1022,6 +1024,7 @@ export type Database = {
         }
         Update: {
           change_request_window_expires_at?: string | null
+          client_access_revoked_at?: string | null
           client_deadline?: string | null
           client_id?: string
           created_at?: string
