@@ -1,17 +1,27 @@
 import type { Metadata } from "next";
-import { Montserrat, Inter } from "next/font/google";
+import { Work_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+// §6 Premium Utilitarian Minimalism: Work Sans (primary sans, replaces Montserrat),
+// JetBrains Mono (data/tabular/timestamps, replaces Inter in that role), Newsreader
+// (editorial serif, page titles only — new, no prior equivalent).
+const workSans = Work_Sans({
+  variable: "--font-worksans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const jbMono = JetBrains_Mono({
+  variable: "--font-jbmono",
   subsets: ["latin"],
   weight: ["400", "500"],
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: ["500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${montserrat.variable} ${inter.variable} h-full antialiased`}
+      className={`${workSans.variable} ${jbMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-main text-primary font-sans">
         {children}

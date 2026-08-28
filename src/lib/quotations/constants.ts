@@ -5,7 +5,7 @@ export type QuotationStatus = (typeof QUOTATION_STATUSES)[number];
 
 export const QUOTATION_STATUS_BADGE: Record<QuotationStatus, string> = {
   draft: "bg-bg-elevated text-text-secondary border border-border-default",
-  sent: "bg-accent-soft text-accent-primary",
-  approved: "bg-success/10 text-success",
-  archived: "bg-error/10 text-error",
+  sent: "bg-pastel-blue-bg text-pastel-blue-fg",
+  approved: "bg-pastel-green-bg text-pastel-green-fg",
+  archived: "bg-pastel-red-bg text-pastel-red-fg",
 };

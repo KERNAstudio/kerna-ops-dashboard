@@ -172,27 +172,38 @@ Project-level widget shows active count + highest severity badge; visible to POC
 
 ## 6. Design System (locked)
 
-Dark mode is primary; light mode is prepared, not default.
+**Revised — Premium Utilitarian Minimalism.** Superseded the original dark-teal SaaS system on
+explicit direction. Warm light mode is primary now; the old dark-teal palette is preserved as an
+opt-in `.dark` variant rather than deleted.
 
 ```css
---bg-main:#0F0F0F;      --bg-card:#171717;      --bg-elevated:#1E1E1E;
---border-default:#2A2A2A;
---accent-primary:#1FAC98; --accent-hover:#17907F; --accent-soft:rgba(31,172,152,0.1);
---success:#2ECC71; --warning:#F4B942; --error:#E74C3C;
---text-primary:#EDEDED; --text-secondary:#A3A3A3;
---radius-default:12px;
+--bg-main:#F7F6F3;      --bg-card:#FFFFFF;      --bg-elevated:#F9F9F8;
+--border-default:#EAEAEA;
+--accent-primary:#4F7D74; --accent-hover:#3E6A61; --accent-soft:#EAF0EE;
+--success:#346538; --warning:#956400; --error:#9F2F2D;
+--text-primary:#2F3437; --text-secondary:#787774;
+--radius-default:10px;
 --space-xs:4px; --space-sm:8px; --space-md:12px; --space-lg:16px; --space-xl:24px; --space-2xl:32px;
 
-/* light (optional) */
---bg-main-light:#F8F7F5; --bg-card-light:#FFFFFF;
---text-primary-light:#1A1A1A; --text-secondary-light:#6B6B6B; --border-light:#E5E5E5;
+/* status pastels — pill badges only, never large surfaces */
+--pastel-green-bg:#EDF3EC; --pastel-green-fg:#346538;
+--pastel-yellow-bg:#FBF3DB; --pastel-yellow-fg:#956400;
+--pastel-blue-bg:#E1F3FE;  --pastel-blue-fg:#1F6C9F;
+--pastel-red-bg:#FDEBEC;   --pastel-red-fg:#9F2F2D;
+
+/* dark (opt-in, .dark class — the original locked palette) */
+--bg-main-dark:#0F0F0F;      --bg-card-dark:#171717;      --bg-elevated-dark:#1E1E1E;
+--border-default-dark:#2A2A2A;
+--accent-primary-dark:#1FAC98; --accent-hover-dark:#17907F;
+--text-primary-dark:#EDEDED; --text-secondary-dark:#A3A3A3;
 ```
 
-- Font: **Montserrat** (primary), **Inter** (data/tabular).
-- Type scale: Page title 28/700 · Section heading 20/600 · Card title 16/600 · Body 14/400 · Button 14/500 · Caption 12/400. Line-height 1.4–1.6.
-- Primary button: 40px h, 16px padding, 10px radius, states default/hover/active/disabled/loading required.
-- Cards: `#171717` bg, 1px `#2A2A2A` border, 12px radius, no heavy shadows.
-- Charts: primary series teal, secondary muted gray `#6B6B6B`, max 4 colors, no rainbow palettes. **Accent is for selection/active state only — never for severity** (severity uses warning/error).
+- Font: **Work Sans** (primary sans), **Newsreader** (editorial serif, page titles only, italic), **JetBrains Mono** (data/tabular/timestamps — replaces Inter in that role).
+- Type scale: Page title 28–30px, serif italic · Section heading 20/600 sans · Card title 16/600 · Body 14/400 · Button 12.5/600 · Caption 11/500 mono for meta/timestamps.
+- Primary button: solid `--text-primary`-on-inverse (near-black bg, white text), 6px radius, no shadow — never the accent color as a button fill.
+- Cards: `#FFFFFF` bg, 1px `#EAEAEA` border, 10px radius, no heavy shadows (`box-shadow` opacity < 0.05 if any at all).
+- Status badges: pill-shaped (`border-radius: 999px`), pastel bg/fg pairs above — not the old `accent/10` or `severity/10` opacity-tint pattern.
+- Charts: primary series the new muted teal-green, secondary muted gray `#787774`, max 4 colors, no rainbow palettes. **Accent is for selection/active state only — never for severity** (severity uses the pastel set).
 - Gradients allowed only on: login screen, empty states, hero strip, founder marketing surfaces. Never on: data tables, approval screens, vault, dense workflows.
 - Client view modes — **Simple**: health, stage, next action, pending approvals, short updates, vault when unlocked. **Balanced** (default): + module progress, milestone timeline, collapsed version history, payment progress, key team roles. **Power**: everything — full activity feed, full module/version/team detail, payment log.
 - Guardrails: status always above the fold · approval buttons always prominent · locked downloads clearly greyed with tooltip · never rely on color alone for meaning · tables scroll on overflow · every empty state guides the next action.

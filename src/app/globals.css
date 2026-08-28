@@ -1,21 +1,35 @@
 @import "tailwindcss";
 
-/* Design tokens — locked, kerna-master-reference.md §6. Dark mode is primary;
-   light mode is prepared, not default. Don't invent new colors/spacing outside this set. */
+/* Design tokens — locked, kerna-master-reference.md §6. Revised to the Premium Utilitarian
+   Minimalism palette on explicit direction (warm light mode is now primary; the original
+   dark-teal SaaS palette is preserved below as an opt-in `.dark` class, not deleted).
+   Don't invent new colors/spacing outside this set. */
 :root {
-  --bg-main: #0f0f0f;
-  --bg-card: #171717;
-  --bg-elevated: #1e1e1e;
-  --border-default: #2a2a2a;
-  --accent-primary: #1fac98;
-  --accent-hover: #17907f;
-  --accent-soft: rgba(31, 172, 152, 0.1);
-  --success: #2ecc71;
-  --warning: #f4b942;
-  --error: #e74c3c;
-  --text-primary: #ededed;
-  --text-secondary: #a3a3a3;
-  --radius-default: 12px;
+  --bg-main: #f7f6f3;
+  --bg-card: #ffffff;
+  --bg-elevated: #f9f9f8;
+  --border-default: #eaeaea;
+  --accent-primary: #4f7d74;
+  --accent-hover: #3e6a61;
+  --accent-soft: #eaf0ee;
+  --success: #346538;
+  --warning: #956400;
+  --error: #9f2f2d;
+  --text-primary: #2f3437;
+  --text-secondary: #787774;
+  --radius-default: 10px;
+
+  /* Status pastels (§6) — pill badges only, never large surfaces. Replaces the old
+     accent/severity "/10 opacity tint" badge pattern used throughout the app. */
+  --pastel-green-bg: #edf3ec;
+  --pastel-green-fg: #346538;
+  --pastel-yellow-bg: #fbf3db;
+  --pastel-yellow-fg: #956400;
+  --pastel-blue-bg: #e1f3fe;
+  --pastel-blue-fg: #1f6c9f;
+  --pastel-red-bg: #fdebec;
+  --pastel-red-fg: #9f2f2d;
+
   /* Named spacing scale from §6 — kept as plain CSS variables only, deliberately NOT
      re-exposed under Tailwind's --spacing- theme namespace: those names (xs, sm, md, lg,
      xl, 2xl) collide with Tailwind v4's own reserved T-shirt-size scale for max-w, w,
@@ -29,14 +43,29 @@
   --space-2xl: 32px;
 }
 
-/* Light mode (optional, not default — see §6) */
-.light {
-  --bg-main: #f8f7f5;
-  --bg-card: #ffffff;
-  --bg-elevated: #ffffff;
-  --border-default: #e5e5e5;
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b6b6b;
+/* Dark mode (opt-in via .dark class) — the original locked palette, preserved rather than
+   deleted. Nothing in the app applies this class yet; it's here for a future toggle. */
+.dark {
+  --bg-main: #0f0f0f;
+  --bg-card: #171717;
+  --bg-elevated: #1e1e1e;
+  --border-default: #2a2a2a;
+  --accent-primary: #1fac98;
+  --accent-hover: #17907f;
+  --accent-soft: rgba(31, 172, 152, 0.1);
+  --success: #2ecc71;
+  --warning: #f4b942;
+  --error: #e74c3c;
+  --text-primary: #ededed;
+  --text-secondary: #a3a3a3;
+  --pastel-green-bg: rgba(52, 101, 56, 0.18);
+  --pastel-yellow-bg: rgba(149, 100, 0, 0.2);
+  --pastel-blue-bg: rgba(31, 108, 159, 0.2);
+  --pastel-red-bg: rgba(159, 47, 45, 0.2);
+  --pastel-green-fg: #6fbf73;
+  --pastel-yellow-fg: #f4b942;
+  --pastel-blue-fg: #5cb3f0;
+  --pastel-red-fg: #e88b87;
 }
 
 @theme inline {
@@ -52,9 +81,18 @@
   --color-error: var(--error);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-pastel-green-bg: var(--pastel-green-bg);
+  --color-pastel-green-fg: var(--pastel-green-fg);
+  --color-pastel-yellow-bg: var(--pastel-yellow-bg);
+  --color-pastel-yellow-fg: var(--pastel-yellow-fg);
+  --color-pastel-blue-bg: var(--pastel-blue-bg);
+  --color-pastel-blue-fg: var(--pastel-blue-fg);
+  --color-pastel-red-bg: var(--pastel-red-bg);
+  --color-pastel-red-fg: var(--pastel-red-fg);
   --radius-DEFAULT: var(--radius-default);
-  --font-sans: var(--font-montserrat);
-  --font-data: var(--font-inter);
+  --font-sans: var(--font-worksans);
+  --font-data: var(--font-jbmono);
+  --font-serif: var(--font-newsreader);
 }
 
 body {

@@ -8,15 +8,15 @@ export type EscalationSeverity = (typeof ESCALATION_SEVERITIES)[number];
 
 export const SEVERITY_BADGE: Record<EscalationSeverity, string> = {
   low: "bg-bg-elevated text-text-secondary border border-border-default",
-  medium: "bg-warning/10 text-warning",
-  high: "bg-error/10 text-error",
+  medium: "bg-pastel-yellow-bg text-pastel-yellow-fg",
+  high: "bg-pastel-red-bg text-pastel-red-fg",
 };
 
 export const STATUS_BADGE: Record<EscalationStatus, string> = {
-  open: "bg-error/10 text-error",
-  under_review: "bg-warning/10 text-warning",
-  action_in_progress: "bg-accent-soft text-accent-primary",
-  resolved: "bg-success/10 text-success",
+  open: "bg-pastel-red-bg text-pastel-red-fg",
+  under_review: "bg-pastel-yellow-bg text-pastel-yellow-fg",
+  action_in_progress: "bg-pastel-blue-bg text-pastel-blue-fg",
+  resolved: "bg-pastel-green-bg text-pastel-green-fg",
   dismissed: "bg-bg-elevated text-text-secondary border border-border-default",
 };
 
