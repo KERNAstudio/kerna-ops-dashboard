@@ -4,7 +4,7 @@ import { createFakeAdminClient } from "@/test-utils/fakeSupabase";
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { detectPaymentOverdue, detectClientRejectionLoop } from "./detect";
+import { detectPaymentOverdue, detectClientRejectionLoop, detectSubscriptionOverdue } from "./detect";
 
 let db: Record<string, Record<string, unknown>[]>;
 
@@ -28,6 +28,7 @@ beforeEach(() => {
     project_modules: [],
     module_versions: [],
     approvals: [],
+    subscriptions: [],
   };
   vi.mocked(createAdminClient).mockReturnValue(createFakeAdminClient(db));
 });
@@ -95,6 +96,32 @@ describe("detectClientRejectionLoop", () => {
   it("does not flag a project below the threshold", async () => {
     seedApprovals(2);
     await detectClientRejectionLoop();
+    expect(db.escalations).toHaveLength(0);
+  });
+});
+
+// Subscriptions have no §5 rule of their own — modeled on Payment Overdue: due date + grace
+// period elapsed, still active, unpaid.
+describe("detectSubscriptionOverdue", () => {
+  it("flags an active subscription once due_date + grace_period has passed", async () => {
+    db.subscriptions.push({ project_id: "proj-1", next_due_date: daysAgo(10).slice(0, 10), grace_period_days: 7, status: "active" });
+    await detectSubscriptionOverdue();
+    expect(db.escalations).toHaveLength(1);
+    const escalation = db.escalations[0] as { escalation_type: string; severity: string; owner_id: string };
+    expect(escalation.escalation_type).toBe("subscription_overdue");
+    expect(escalation.severity).toBe("high");
+    expect(escalation.owner_id).toBe("poc-user");
+  });
+
+  it("does not flag a subscription still within its grace period", async () => {
+    db.subscriptions.push({ project_id: "proj-1", next_due_date: daysAgo(3).slice(0, 10), grace_period_days: 7, status: "active" });
+    await detectSubscriptionOverdue();
+    expect(db.escalations).toHaveLength(0);
+  });
+
+  it("does not flag a paused or cancelled subscription", async () => {
+    db.subscriptions.push({ project_id: "proj-1", next_due_date: daysAgo(30).slice(0, 10), grace_period_days: 7, status: "paused" });
+    await detectSubscriptionOverdue();
     expect(db.escalations).toHaveLength(0);
   });
 });

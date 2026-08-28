@@ -7,6 +7,7 @@ import { ClientProjectOverview } from "./ClientProjectOverview";
 import { TerminationPanel } from "./TerminationPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
 import { ContractPanel } from "./ContractPanel";
+import { SubscriptionPanel } from "./SubscriptionPanel";
 import { SEVERITY_BADGE, type EscalationSeverity } from "@/lib/escalations/constants";
 
 function fmtDate(v: string | null) {
@@ -58,6 +59,12 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
     created_by_name: a.created_by?.name ?? null,
   }));
   const canEditRequirement = actor.type === "staff" && (actor.roles.includes("founder") || client?.poc_user_id === actor.id);
+
+  const { data: subscription } = await admin
+    .from("subscriptions")
+    .select("billing_cycle, next_due_date, grace_period_days, status")
+    .eq("project_id", id)
+    .maybeSingle();
 
   const { data: activeContractVersionRow } = await admin
     .from("contract_versions")
@@ -154,6 +161,7 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
         requirementSnapshot={requirementSnapshot}
         addenda={addenda}
         activeContractVersion={activeContractVersion}
+        subscription={subscription}
       />
     );
   }
@@ -187,6 +195,7 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
         canManage={canEditRequirement}
         canCountersign={actor.roles.includes("founder")}
       />
+      <SubscriptionPanel projectId={id} subscription={subscription} canManage={canEditRequirement} />
       <HealthForm projectId={id} healthScoreInternal={project.health_score_internal} healthStatusClient={project.health_status_client} />
       {project.status === "in_development" && <SendFinalApprovalButton projectId={id} />}
       {pendingTermination && (actor.roles.includes("founder") || client?.poc_user_id === actor.id) && (

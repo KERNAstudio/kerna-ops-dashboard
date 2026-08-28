@@ -1337,6 +1337,7 @@ export type Database = {
           id: string
           next_due_date: string | null
           project_id: string
+          status: string
         }
         Insert: {
           billing_cycle: string
@@ -1345,6 +1346,7 @@ export type Database = {
           id?: string
           next_due_date?: string | null
           project_id: string
+          status?: string
         }
         Update: {
           billing_cycle?: string
@@ -1353,12 +1355,13 @@ export type Database = {
           id?: string
           next_due_date?: string | null
           project_id?: string
+          status?: string
         }
         Relationships: [
           {
             foreignKeyName: "subscriptions_project_id_fkey"
             columns: ["project_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },

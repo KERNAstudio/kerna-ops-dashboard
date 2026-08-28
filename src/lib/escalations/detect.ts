@@ -103,6 +103,35 @@ export async function detectPaymentOverdue() {
   }
 }
 
+// Subscriptions have no equivalent §5 rule (the table had zero spec anywhere) — modeled the
+// same shape as Payment Overdue above since it's the same underlying risk: money that was
+// due and hasn't arrived. grace_period_days is per-subscription, not a system_settings key,
+// since it's meant to vary per client arrangement rather than being one global default.
+export async function detectSubscriptionOverdue() {
+  const admin = createAdminClient();
+  const { data: subscriptions } = await admin.from("subscriptions").select("project_id, next_due_date, grace_period_days").eq("status", "active");
+
+  for (const sub of subscriptions ?? []) {
+    if (!sub.next_due_date) continue;
+    const cutoff = new Date(sub.next_due_date);
+    cutoff.setDate(cutoff.getDate() + (sub.grace_period_days ?? 0));
+    if (cutoff >= new Date()) continue;
+
+    const { data: project } = await admin.from("projects").select("client_id").eq("id", sub.project_id).maybeSingle();
+    const { data: client } = project
+      ? await admin.from("clients").select("poc_user_id").eq("id", project.client_id).maybeSingle()
+      : { data: null };
+
+    await createEscalationIfNotExists({
+      projectId: sub.project_id,
+      escalationType: "subscription_overdue",
+      severity: "high",
+      ownerId: client?.poc_user_id ?? null,
+      reason: `Recurring payment overdue since ${sub.next_due_date} (grace period ${sub.grace_period_days ?? 0}d).`,
+    });
+  }
+}
+
 // §5 rule: "POC Inactivity | last_activity > 1 day | High | Founder". last_activity is
 // derived from users.last_login_at (set on every staff sign-in — see src/app/login/actions.ts).
 // Only checked for projects still actively moving (not completed).
@@ -173,4 +202,5 @@ export async function runEscalationChecks() {
   await detectPaymentOverdue();
   await detectPocInactivity();
   await detectClientRejectionLoop();
+  await detectSubscriptionOverdue();
 }

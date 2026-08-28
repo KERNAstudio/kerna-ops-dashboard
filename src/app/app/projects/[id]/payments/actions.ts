@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { advanceProjectStatus } from "@/lib/projects/lifecycle";
 import { createInvoiceForPayment } from "@/lib/invoices";
+import { advanceSubscriptionCycle } from "@/lib/projects/subscriptions";
 
 export type PaymentFormState = { error: string | null };
 
@@ -42,7 +43,7 @@ export async function logPayment(_prev: PaymentFormState, formData: FormData): P
 
   if (received) {
     await createInvoiceForPayment(admin, { projectId, paymentId: payment.id, amount, actorId: actor.id });
-    await advanceProjectOnPayment(projectId, paymentType, actor.id);
+    await advanceProjectOnPayment(admin, projectId, paymentType, actor.id);
   }
 
   revalidatePath(`/app/projects/${projectId}/payments`);
@@ -77,7 +78,7 @@ export async function markPaymentReceived(_prev: PaymentFormState, formData: For
   });
 
   await createInvoiceForPayment(admin, { projectId, paymentId, amount: previous.amount, actorId: actor.id });
-  await advanceProjectOnPayment(projectId, previous.payment_type, actor.id);
+  await advanceProjectOnPayment(admin, projectId, previous.payment_type, actor.id);
 
   revalidatePath(`/app/projects/${projectId}/payments`);
   revalidatePath(`/app/projects/${projectId}/overview`);
@@ -88,11 +89,13 @@ export async function markPaymentReceived(_prev: PaymentFormState, formData: For
 // payment is confirmed. advanceProjectStatus only moves the status forward from the exact
 // prior stage, so a final payment logged early (before deliverable_sent) is a no-op here —
 // it stays a received payment without forcing the project to "completed" out of order.
-async function advanceProjectOnPayment(projectId: string, paymentType: string, userId: string) {
+async function advanceProjectOnPayment(admin: ReturnType<typeof createAdminClient>, projectId: string, paymentType: string, userId: string) {
   const type = paymentType.toLowerCase();
   if (type === "advance") {
     await advanceProjectStatus(projectId, "quotation_approved", "advance_paid", userId, "status_advance_paid");
   } else if (type === "final") {
     await advanceProjectStatus(projectId, "final_payment_pending", "completed", userId, "status_completed");
+  } else if (type === "subscription") {
+    await advanceSubscriptionCycle(admin, projectId);
   }
 }

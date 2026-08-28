@@ -2,6 +2,7 @@ import { ScopeApprovalButton, FinalDeliveryReview } from "./TimelineForm";
 import { DangerZone } from "./DangerZone";
 import { RequirementsPanel } from "./RequirementsPanel";
 import { ContractPanel } from "./ContractPanel";
+import { SubscriptionPanel } from "./SubscriptionPanel";
 
 // §6: "Client view modes — Simple: health, stage, next action, pending approvals, short
 // updates, vault when unlocked. Balanced (default): + module progress, milestone timeline,
@@ -24,6 +25,7 @@ export function ClientProjectOverview({
   requirementSnapshot,
   addenda,
   activeContractVersion,
+  subscription,
 }: {
   projectId: string;
   status: string;
@@ -47,6 +49,7 @@ export function ClientProjectOverview({
     signed_at: string | null;
     signed_by_name: string | null;
   } | null;
+  subscription: { billing_cycle: string; next_due_date: string | null; grace_period_days: number | null; status: string } | null;
 }) {
   const showBalanced = viewMode === "balanced" || viewMode === "power";
   const showPower = viewMode === "power";
@@ -105,6 +108,7 @@ export function ClientProjectOverview({
       {activeContractVersion && (
         <ContractPanel projectId={projectId} activeVersion={activeContractVersion} canManage={false} canCountersign={false} />
       )}
+      {subscription && <SubscriptionPanel projectId={projectId} subscription={subscription} canManage={false} />}
 
       <DangerZone projectId={projectId} hasPendingRequest={hasPendingTermination} />
     </div>
