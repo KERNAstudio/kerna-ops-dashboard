@@ -136,33 +136,36 @@ export function LeadsView({ leads, staff }: { leads: Lead[]; staff: { id: string
           </table>
 </div>
         ) : (
-          <div className="grid grid-cols-6 gap-3 p-4">
-            {LEAD_STATUSES.map((col) => {
-              const cards = filtered.filter((l) => l.status === col);
-              return (
-                <div key={col} className="min-h-[200px] rounded-[var(--radius-default)] border border-border-default bg-bg-elevated p-2">
-                  <div className="flex justify-between px-1.5 py-2 text-[11.5px] font-bold text-text-secondary">
-                    <span>{col}</span>
-                    <span>{cards.length}</span>
+          <div className="overflow-x-auto p-4">
+            <div className="flex gap-3">
+              {LEAD_STATUSES.map((col) => {
+                const cards = filtered.filter((l) => l.status === col);
+                return (
+                  <div
+                    key={col}
+                    className="min-h-[200px] w-[220px] flex-none rounded-[var(--radius-default)] border border-border-default bg-bg-elevated p-2"
+                  >
+                    <div className="flex justify-between px-1.5 py-2 text-[11.5px] font-bold text-text-secondary">
+                      <span>{col}</span>
+                      <span>{cards.length}</span>
+                    </div>
+                    {cards.map((lead) => (
+                      <Link
+                        href={`/app/leads/${lead.id}`}
+                        key={lead.id}
+                        className="mb-2 block rounded-[9px] border border-border-default bg-bg-card p-2.5"
+                      >
+                        <div className="text-[13px] font-semibold">{lead.company_name}</div>
+                        <div className="mt-0.5 text-[11.5px] text-text-secondary">
+                          {lead.contact_name} · {lead.phone ?? "—"}
+                        </div>
+                      </Link>
+                    ))}
+                    {cards.length === 0 && <div className="p-4 text-[11px] text-text-secondary">Empty</div>}
                   </div>
-                  {cards.map((lead) => (
-                    <Link
-                      href={`/app/leads/${lead.id}`}
-                      key={lead.id}
-                      className="mb-2 block rounded-[9px] border border-border-default bg-bg-card p-2.5"
-                    >
-                      <div className="text-[13px] font-semibold">{lead.company_name}</div>
-                      <div className="mt-0.5 text-[11.5px] text-text-secondary">
-                        {lead.contact_name} · {lead.phone ?? "—"}
-                      </div>
-                    </Link>
-                  ))}
-                  {cards.length === 0 && (
-                    <div className="p-4 text-[11px] text-text-secondary">Empty</div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
