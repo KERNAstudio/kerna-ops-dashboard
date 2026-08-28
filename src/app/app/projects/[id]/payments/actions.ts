@@ -43,6 +43,13 @@ export async function logPayment(_prev: PaymentFormState, formData: FormData): P
 
   await logAudit({ userId: actor.id, entityType: "payment", entityId: payment.id, action: "create", newState: payment });
 
+  // §25 fix: logging (not just receiving) a final payment is what moves the project from
+  // "delivery approved" to "payment now in flight" — a no-op if the project isn't currently
+  // at final_approved, since advanceProjectStatus only ever moves from the exact prior stage.
+  if (paymentType.toLowerCase() === "final") {
+    await advanceProjectStatus(projectId, "final_approved", "final_payment_pending", actor.id, "status_final_payment_pending");
+  }
+
   if (received) {
     await createInvoiceForPayment(admin, { projectId, paymentId: payment.id, amount, actorId: actor.id });
     await advanceProjectOnPayment(admin, projectId, paymentType, actor.id);

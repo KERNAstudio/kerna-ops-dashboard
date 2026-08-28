@@ -109,21 +109,18 @@ export async function sendForFinalApproval(_prev: OverviewFormState, formData: F
   return { error: null };
 }
 
-// §2 steps 8-9: client's final approval moves straight to "Final Payment Pending" — the
-// enum's "final_approved" state and "payment pending" are not independently actionable
-// here, so this one client click covers both in a single audited transition.
+// §2 step 8: client's final approval moves to "Final Approved" — delivery is done, payment
+// isn't yet requested. Previously this jumped straight to "Final Payment Pending" in one
+// step, on the reasoning that the two states were "not independently actionable" — that
+// broke down once subscriptions existed: a project can now sit fully delivered with no
+// one-time final payment in flight at all. logPayment (payments/actions.ts) is what moves
+// it on to final_payment_pending, the moment a "final" payment is actually logged.
 export async function approveFinalDelivery(_prev: OverviewFormState, formData: FormData): Promise<OverviewFormState> {
   const projectId = String(formData.get("project_id") ?? "");
   const actor = await guard({ projectId });
   if (actor.type !== "client") redirect("/403");
 
-  await advanceProjectStatus(
-    projectId,
-    "deliverable_sent",
-    "final_payment_pending",
-    null,
-    "client_approve_final_delivery"
-  );
+  await advanceProjectStatus(projectId, "deliverable_sent", "final_approved", null, "client_approve_final_delivery");
   revalidatePath(`/app/projects/${projectId}/overview`);
   return { error: null };
 }
