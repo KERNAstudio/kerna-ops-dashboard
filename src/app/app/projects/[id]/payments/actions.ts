@@ -8,6 +8,8 @@ import { logAudit } from "@/lib/audit";
 import { advanceProjectStatus } from "@/lib/projects/lifecycle";
 import { createInvoiceForPayment } from "@/lib/invoices";
 import { advanceSubscriptionCycle } from "@/lib/projects/subscriptions";
+import { notify } from "@/lib/notify";
+import { getProjectPocId } from "@/lib/projects/access";
 
 export type PaymentFormState = { error: string | null };
 
@@ -44,6 +46,15 @@ export async function logPayment(_prev: PaymentFormState, formData: FormData): P
   if (received) {
     await createInvoiceForPayment(admin, { projectId, paymentId: payment.id, amount, actorId: actor.id });
     await advanceProjectOnPayment(admin, projectId, paymentType, actor.id);
+  } else {
+    // MASTER_WORKFLOW.pdf: "Payment pending → POC notified."
+    const pocId = await getProjectPocId(admin, projectId);
+    await notify(admin, [pocId], {
+      type: "payment_pending",
+      entityId: payment.id,
+      message: `${paymentType} payment of ${amount.toFixed(2)} logged, awaiting receipt confirmation.`,
+      severity: "medium",
+    });
   }
 
   revalidatePath(`/app/projects/${projectId}/payments`);

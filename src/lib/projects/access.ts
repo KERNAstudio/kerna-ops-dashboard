@@ -18,3 +18,10 @@ export function toClientSafeProject(project: Tables<"projects">): ClientSafeProj
   const { internal_deadline: _internal_deadline, health_score_internal: _health_score_internal, ...safe } = project;
   return safe;
 }
+
+export async function getProjectPocId(admin: ReturnType<typeof createAdminClient>, projectId: string): Promise<string | null> {
+  const { data: project } = await admin.from("projects").select("client_id").eq("id", projectId).maybeSingle();
+  if (!project) return null;
+  const { data: client } = await admin.from("clients").select("poc_user_id").eq("id", project.client_id).maybeSingle();
+  return client?.poc_user_id ?? null;
+}

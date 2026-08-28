@@ -8,6 +8,8 @@ import { logAudit } from "@/lib/audit";
 import { getModuleDetail } from "@/lib/modules/access";
 import { advanceProjectStatus } from "@/lib/projects/lifecycle";
 import { uploadProjectFile } from "@/lib/storage";
+import { notify } from "@/lib/notify";
+import { getProjectPocId } from "@/lib/projects/access";
 
 export type ModuleActionState = { error: string | null };
 
@@ -20,7 +22,7 @@ export async function uploadVersion(_prev: ModuleActionState, formData: FormData
   const actor = await guard({ projectId, moduleId, permission: "MODULE_EDIT" });
   if (actor.type !== "staff") redirect("/403");
 
-  const { latestVersion, latestApproval } = await getModuleDetail(moduleId);
+  const { module, latestVersion, latestApproval } = await getModuleDetail(moduleId);
   if (latestApproval?.status === "approved") {
     return { error: "This module's latest version is approved and locked. Ask the POC to reopen it first." };
   }
@@ -65,6 +67,17 @@ export async function uploadVersion(_prev: ModuleActionState, formData: FormData
     action: "upload",
     newState: { version, approval },
   });
+
+  // MASTER_WORKFLOW.pdf: "Dev sends approval request → POC notified."
+  if (approval) {
+    const pocId = await getProjectPocId(admin, projectId);
+    await notify(admin, [pocId], {
+      type: "approval_required",
+      entityId: approval.id,
+      message: `New version uploaded for ${module.module_type} — awaiting client approval.`,
+      severity: "medium",
+    });
+  }
 
   // §2: "...Scope Approved → In Development..." — the first version uploaded on the
   // project starts the Development phase.

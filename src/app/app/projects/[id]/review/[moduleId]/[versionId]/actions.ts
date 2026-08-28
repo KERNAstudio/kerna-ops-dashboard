@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { guard } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { notify } from "@/lib/notify";
+import { getProjectPocId } from "@/lib/projects/access";
 
 export type ReviewFormState = { error: string | null };
 
@@ -74,6 +76,19 @@ export async function requestChanges(_prev: ReviewFormState, formData: FormData)
     action: "client_request_changes",
     previousState: previous,
     newState: { ...updated, feedback },
+  });
+
+  // MASTER_WORKFLOW.pdf: "Client rejects approval → POC + Dev notified."
+  const { data: version } = await admin.from("module_versions").select("module_id").eq("id", previous.module_version_id).maybeSingle();
+  const { data: assignments } = version
+    ? await admin.from("module_assignments").select("user_id").eq("module_id", version.module_id)
+    : { data: [] };
+  const pocId = await getProjectPocId(admin, projectId);
+  await notify(admin, [pocId, ...(assignments ?? []).map((a) => a.user_id)], {
+    type: "approval_rejected",
+    entityId: approvalId,
+    message: `Client requested changes: ${feedback}`,
+    severity: "medium",
   });
 
   revalidatePath(`/app/projects/${projectId}`);
