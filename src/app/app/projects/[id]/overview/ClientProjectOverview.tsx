@@ -1,6 +1,7 @@
 import { ScopeApprovalButton, FinalDeliveryReview } from "./TimelineForm";
 import { DangerZone } from "./DangerZone";
 import { RequirementsPanel } from "./RequirementsPanel";
+import { ContractPanel } from "./ContractPanel";
 
 // §6: "Client view modes — Simple: health, stage, next action, pending approvals, short
 // updates, vault when unlocked. Balanced (default): + module progress, milestone timeline,
@@ -22,6 +23,7 @@ export function ClientProjectOverview({
   hasPendingTermination,
   requirementSnapshot,
   addenda,
+  activeContractVersion,
 }: {
   projectId: string;
   status: string;
@@ -37,6 +39,14 @@ export function ClientProjectOverview({
   hasPendingTermination: boolean;
   requirementSnapshot: { content: string; locked_at: string; locked_by_name: string | null } | null;
   addenda: { id: string; description: string; created_at: string; created_by_name: string | null }[];
+  activeContractVersion: {
+    id: string;
+    version_number: number;
+    document_url: string | null;
+    issued_at: string | null;
+    signed_at: string | null;
+    signed_by_name: string | null;
+  } | null;
 }) {
   const showBalanced = viewMode === "balanced" || viewMode === "power";
   const showPower = viewMode === "power";
@@ -90,6 +100,10 @@ export function ClientProjectOverview({
             {team.length === 0 && <Empty />}
           </Panel>
         </div>
+      )}
+
+      {activeContractVersion && (
+        <ContractPanel projectId={projectId} activeVersion={activeContractVersion} canManage={false} canCountersign={false} />
       )}
 
       <DangerZone projectId={projectId} hasPendingRequest={hasPendingTermination} />

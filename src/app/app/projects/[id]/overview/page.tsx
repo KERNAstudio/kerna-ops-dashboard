@@ -6,6 +6,7 @@ import { TimelineForm, HealthForm, SendFinalApprovalButton } from "./TimelineFor
 import { ClientProjectOverview } from "./ClientProjectOverview";
 import { TerminationPanel } from "./TerminationPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
+import { ContractPanel } from "./ContractPanel";
 import { SEVERITY_BADGE, type EscalationSeverity } from "@/lib/escalations/constants";
 
 function fmtDate(v: string | null) {
@@ -57,6 +58,23 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
     created_by_name: a.created_by?.name ?? null,
   }));
   const canEditRequirement = actor.type === "staff" && (actor.roles.includes("founder") || client?.poc_user_id === actor.id);
+
+  const { data: activeContractVersionRow } = await admin
+    .from("contract_versions")
+    .select("id, version_number, document_url, issued_at, signed_at, signed_by:users(name), contracts!inner(project_id)")
+    .eq("contracts.project_id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+  const activeContractVersion = activeContractVersionRow
+    ? {
+        id: activeContractVersionRow.id,
+        version_number: activeContractVersionRow.version_number,
+        document_url: activeContractVersionRow.document_url,
+        issued_at: activeContractVersionRow.issued_at,
+        signed_at: activeContractVersionRow.signed_at,
+        signed_by_name: activeContractVersionRow.signed_by?.name ?? null,
+      }
+    : null;
 
   // §5: "Project-level widget shows active count + highest severity badge; visible to
   // POC/Founder/Management (read-only), never to client [and not Dev/Design/Research]."
@@ -135,6 +153,7 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
         hasPendingTermination={!!pendingTermination}
         requirementSnapshot={requirementSnapshot}
         addenda={addenda}
+        activeContractVersion={activeContractVersion}
       />
     );
   }
@@ -162,6 +181,12 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
 
       <TimelineForm projectId={id} internalDeadline={project.internal_deadline} clientDeadline={project.client_deadline} />
       <RequirementsPanel projectId={id} snapshot={requirementSnapshot} addenda={addenda} canEdit={canEditRequirement} />
+      <ContractPanel
+        projectId={id}
+        activeVersion={activeContractVersion}
+        canManage={canEditRequirement}
+        canCountersign={actor.roles.includes("founder")}
+      />
       <HealthForm projectId={id} healthScoreInternal={project.health_score_internal} healthStatusClient={project.health_status_client} />
       {project.status === "in_development" && <SendFinalApprovalButton projectId={id} />}
       {pendingTermination && (actor.roles.includes("founder") || client?.poc_user_id === actor.id) && (
